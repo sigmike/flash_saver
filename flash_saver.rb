@@ -24,6 +24,10 @@ def flash_running?
   flash_on
 end
 
+def screen_saver_active?
+  (%x(gconftool-2 -g /apps/gnome-screensaver/idle_activation_enabled) == "true")
+end
+
 options = {}
 
 optparse = OptionParser.new do|opts|
@@ -52,7 +56,7 @@ loop do
   sleep options[:wait]
   flash_on = flash_running?
 
-  ss_on = (%x(gconftool-2 -g /apps/gnome-screensaver/idle_activation_enabled) == "true")
+  ss_on = screen_saver_active?
 
   if flash_on and ss_on
     switch_screen_saver(:off)
