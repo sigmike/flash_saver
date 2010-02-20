@@ -39,8 +39,8 @@ options = {}
 optparse = OptionParser.new do|opts|
   opts.banner = "Usage: #$0 [options]"
 
-  options[:wait] = 60
-  opts.on( '-w', '--wait SECONDS', 'Delay between checks' ) do |seconds|
+  options[:wait] = 30
+  opts.on( '-w', '--wait SECONDS', "Delay between checks (default: #{options[:wait]})" ) do |seconds|
     options[:wait] = seconds.to_f
   end
 
