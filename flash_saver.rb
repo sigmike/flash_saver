@@ -30,11 +30,6 @@ def switch_screen_saver(state)
   end
 end
 
-def poke_screensaver
-  log "Simulating user activity"
-  run "gnome-screensaver-command -p"
-end
-
 def flash_running?
   resolution = %x(xrandr).split("\n").grep(/\*/).first.split.first
   debug "Current resolution: #{resolution.inspect}"
@@ -81,10 +76,23 @@ end
 
 optparse.parse!
 
-loop do
-  if flash_running?
-    poke_screensaver
-  end
+switch_screen_saver(:on)
 
-  sleep options[:wait]
+begin
+  loop do
+    flash_on = flash_running?
+    ss_on = screen_saver_active?
+
+    if flash_on and ss_on
+      log "Flash and screen saver are both on."
+      switch_screen_saver(:off)
+    elsif !flash_on and !ss_on
+      log "Flash and screen saver are both off."
+      switch_screen_saver(:on)
+    end
+
+    sleep options[:wait]
+  end
+ensure
+  switch_screen_saver(:on)
 end
