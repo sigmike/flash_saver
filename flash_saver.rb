@@ -11,6 +11,19 @@ def switch_screen_saver(state)
   system "gconftool-2 -s /apps/gnome-screensaver/idle_activation_enabled --type bool #{state == :on}"
 end
 
+def flash_running?
+    flash_on = false
+    
+    %x(pgrep firefox).split.each do |pid|
+        if system("grep libflashplayer /proc/#{pid}/maps > /dev/null")
+            flash_on = true
+        end
+    end
+    puts "flash running: #{flash_on}" if $VERBOSE
+    
+    flash_on
+end
+
 options = {}
 
 optparse = OptionParser.new do|opts|
@@ -31,24 +44,9 @@ optparse = OptionParser.new do|opts|
   end
 end
 
-def flash_running?
-    flash_on = false
-    
-    %x(pgrep firefox).split.each do |pid|
-        if system("grep libflashplayer /proc/#{pid}/maps > /dev/null")
-            flash_on = true
-        end
-    end
-    puts "flash running: #{flash_on}" if $VERBOSE
-    
-    flash_on
-end
-
 optparse.parse!
 
 switch_screen_saver(:on)
-
-we_turned_it_off = false
 
 loop do
     sleep options[:wait]
@@ -58,9 +56,7 @@ loop do
 
     if flash_on and ss_on
         switch_screen_saver(:off)
-        we_turned_it_off = true
-    elsif !flash_on and !ss_on and we_turned_it_off
+    elsif !flash_on and !ss_on
         switch_screen_saver(:on)
-        we_turned_it_off = false
     end
 end
