@@ -1,13 +1,44 @@
 #!/bin/env ruby
 
-# Cleanup any bad state we left behind if the user exited while flash was
-# running
-system "gconftool-2 -s /apps/gnome-screensaver/idle_activation_enabled --type bool true"
+require 'optparse'
+
+def log(message)
+  puts message if $VERBOSE
+end
+
+def switch_screen_saver(state)
+  log "switching #{state} screen saver"
+  system "gconftool-2 -s /apps/gnome-screensaver/idle_activation_enabled --type bool #{state == :on}"
+end
+
+options = {}
+
+optparse = OptionParser.new do|opts|
+  opts.banner = "Usage: #$0 [options]"
+
+  options[:wait] = 60
+  opts.on( '-w', '--wait SECONDS', 'Delay between checks' ) do |seconds|
+    options[:wait] = seconds.to_f
+  end
+
+  opts.on( '-v', '--verbose', 'Verbose mode' ) do
+    $VERBOSE = true
+  end
+
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    puts opts
+    exit
+  end
+end
+
+optparse.parse!
+
+switch_screen_saver(:on)
 
 we_turned_it_off = false
 
 loop do
-    sleep 60
+    sleep options[:wait]
     flash_on = false
 
     %x(pgrep firefox).split.each do |pid|
@@ -18,10 +49,10 @@ loop do
         ss_on = (%x(gconftool-2 -g /apps/gnome-screensaver/idle_activation_enabled) == "true")
 
         if flash_on and ss_on
-            system "gconftool-2 -s /apps/gnome-screensaver/idle_activation_enabled --type bool false"
+            switch_screen_saver(:off)
             we_turned_it_off = true
         elsif !flash_on and !ss_on and we_turned_it_off
-            system "gconftool-2 -s /apps/gnome-screensaver/idle_activation_enabled --type bool true"
+            switch_screen_saver(:on)
             we_turned_it_off = false
         end
     end
