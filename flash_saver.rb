@@ -31,6 +31,7 @@ def switch_screen_saver(state)
 end
 
 def poke_screensaver
+  log "Simulating user activity"
   run "gnome-screensaver-command -p"
 end
 
