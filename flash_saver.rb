@@ -12,13 +12,19 @@ def switch_screen_saver(state)
 end
 
 def flash_running?
-  flash_on = false
+  resolution = %x(xrandr).split("\n").grep(/\*/).first.split.first
   
-  %x(pgrep firefox).split.each do |pid|
-    if system("grep libflashplayer /proc/#{pid}/maps > /dev/null")
-      flash_on = true
-    end
+  window_infos = %x(xwininfo -all -root)
+  
+  firefox_resolutions = window_infos.scan(/"Firefox": \("firefox" "Firefox"\)\s+(\d+x\d+)\+0\+0  \+0\+0/)
+  firefox_resolutions.flatten!
+  
+  if firefox_resolutions.include? resolution
+    flash_on = true
+  else
+    flash_on = false
   end
+
   puts "flash running: #{flash_on}" if $VERBOSE
   
   flash_on
