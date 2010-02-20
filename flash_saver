@@ -20,11 +20,13 @@ def switch_screen_saver(state)
   if state == :on
     log "Switching screen saver on"
     run "gconftool-2 -s /apps/gnome-screensaver/idle_activation_enabled --type bool true"
+    run "gconftool-2 -s /apps/gnome-power-manager/timeout/sleep_display_ac --type=int #$ORIGINAL_SLEEP_DISPLAY"
     run "xset s on"
     run "xset +dpms"
   else
     log "Switching screen saver off"
     run "gconftool-2 -s /apps/gnome-screensaver/idle_activation_enabled --type bool false"
+    run "gconftool-2 -s /apps/gnome-power-manager/timeout/sleep_display_ac --type=int 0"
     run "xset s off"
     run "xset -dpms"
   end
@@ -76,6 +78,7 @@ end
 
 optparse.parse!
 
+$ORIGINAL_SLEEP_DISPLAY = %x(gconftool-2 -g /apps/gnome-power-manager/timeout/sleep_display_ac).strip
 switch_screen_saver(:on)
 
 begin
