@@ -25,7 +25,7 @@ def flash_running?
 end
 
 def screen_saver_active?
-  (%x(gconftool-2 -g /apps/gnome-screensaver/idle_activation_enabled) == "true")
+  (%x(gconftool-2 -g /apps/gnome-screensaver/idle_activation_enabled).strip == "true")
 end
 
 options = {}
