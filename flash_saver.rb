@@ -6,32 +6,48 @@ def log(message)
   puts message if $VERBOSE
 end
 
+def debug(message)
+  puts message if $DEBUG
+end
+
+
+def run(command)
+  debug "Running #{command.inspect}"
+  system command
+end
+
 def switch_screen_saver(state)
-  log "switching #{state} screen saver"
-  system "gconftool-2 -s /apps/gnome-screensaver/idle_activation_enabled --type bool #{state == :on}"
+  if state == :on
+    log "Switching screen saver on"
+    run "gconftool-2 -s /apps/gnome-screensaver/idle_activation_enabled --type bool true"
+    run "xset s on"
+    run "xset +dpms"
+  else
+    log "Switching screen saver off"
+    run "gconftool-2 -s /apps/gnome-screensaver/idle_activation_enabled --type bool false"
+    run "xset s off"
+    run "xset -dpms"
+  end
 end
 
 def flash_running?
   resolution = %x(xrandr).split("\n").grep(/\*/).first.split.first
+  debug "Current resolution: #{resolution.inspect}"
   
   window_infos = %x(xwininfo -all -root)
   
   firefox_resolutions = window_infos.scan(/"Firefox": \("firefox" "Firefox"\)\s+(\d+x\d+)\+0\+0  \+0\+0/)
   firefox_resolutions.flatten!
+  debug "Firefox resolutions: #{firefox_resolutions.inspect}"
   
-  if firefox_resolutions.include? resolution
-    flash_on = true
-  else
-    flash_on = false
-  end
-
-  puts "flash running: #{flash_on}" if $VERBOSE
-  
-  flash_on
+  firefox_resolutions.include? resolution
 end
 
 def screen_saver_active?
-  (%x(gconftool-2 -g /apps/gnome-screensaver/idle_activation_enabled).strip == "true")
+  command = "gconftool-2 -g /apps/gnome-screensaver/idle_activation_enabled"
+  result = %x(#{command}).strip
+  debug "Running #{command.inspect} => #{result.inspect}"
+  result == "true"
 end
 
 options = {}
@@ -46,6 +62,10 @@ optparse = OptionParser.new do|opts|
 
   opts.on( '-v', '--verbose', 'Verbose mode' ) do
     $VERBOSE = true
+  end
+
+  opts.on( '-d', '--debug', 'Debug mode' ) do
+    $DEBUG = true
   end
 
   opts.on( '-h', '--help', 'Display this screen' ) do
@@ -64,8 +84,10 @@ begin
     ss_on = screen_saver_active?
 
     if flash_on and ss_on
+      log "Flash and screen saver are both on."
       switch_screen_saver(:off)
     elsif !flash_on and !ss_on
+      log "Flash and screen saver are both off."
       switch_screen_saver(:on)
     end
 
