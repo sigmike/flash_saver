@@ -11,3 +11,8 @@ Usage
         -v, --verbose                    Verbose mode
         -d, --debug                      Debug mode
         -h, --help                       Display this screen
+
+Authors
+=======
+* [Michaël Witrant](http://michael.witrant.com/)
+* [Original script by sdennie](http://ubuntuforums.org/showthread.php?t=1090393)
