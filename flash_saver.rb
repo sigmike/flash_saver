@@ -53,9 +53,7 @@ optparse.parse!
 switch_screen_saver(:on)
 
 loop do
-  sleep options[:wait]
   flash_on = flash_running?
-
   ss_on = screen_saver_active?
 
   if flash_on and ss_on
@@ -63,4 +61,6 @@ loop do
   elsif !flash_on and !ss_on
     switch_screen_saver(:on)
   end
+
+  sleep options[:wait]
 end
